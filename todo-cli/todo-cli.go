@@ -10,11 +10,17 @@ import (
 
 type User struct {
 	ID       string
+	Name     string
 	Email    string
 	Password string
 }
 
+func (u User) print() {
+	fmt.Println("User: ", u.ID, u.Email, u.Name)
+}
+
 var userStorage []User
+var authenticatedUser *User // zero value for the pointer is nil
 
 func main() {
 	fmt.Println("Hello to TODO app")
@@ -31,10 +37,13 @@ func main() {
 		*command = scanner.Text()
 	}
 
-	fmt.Printf("userStorage: %+v\n", userStorage)
 }
 
 func runCommand(command string) {
+	if command != "register-user" && command != "exit" && authenticatedUser == nil {
+		login()
+	}
+
 	switch command {
 	case "create-task":
 		createTask()
@@ -53,6 +62,11 @@ func runCommand(command string) {
 }
 
 func createTask() {
+
+	if authenticatedUser != nil {
+		authenticatedUser.print()
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	var name, duedate, category string
@@ -93,11 +107,15 @@ func createCategory() {
 func registerUser() {
 	scanner := bufio.NewScanner(os.Stdin)
 
-	var id, email, password string
+	var id, name, email, password string
 
 	fmt.Println("Please enter user email")
 	scanner.Scan()
 	email = scanner.Text()
+
+	fmt.Println("Please enter user name")
+	scanner.Scan()
+	name = scanner.Text()
 
 	fmt.Println("Please enter user password")
 	scanner.Scan()
@@ -109,6 +127,7 @@ func registerUser() {
 
 	user := User{
 		ID:       strconv.Itoa(len(userStorage) + 1),
+		Name:     name,
 		Email:    email,
 		Password: password,
 	}
@@ -130,5 +149,19 @@ func login() {
 	password = scanner.Text()
 
 	fmt.Println("user: ", id, email, password)
+
+	for _, user := range userStorage {
+		if user.Email == email && user.Password == password {
+			authenticatedUser = &user
+
+			break
+		}
+	}
+
+	// If there is a user record with corresponding data, then allow the user to continue
+	if authenticatedUser == nil {
+		fmt.Println("The email or password is not correct")
+		return
+	}
 
 }
