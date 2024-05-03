@@ -5,14 +5,22 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 type User struct {
-	ID       string
+	ID       int
 	Name     string
 	Email    string
 	Password string
+}
+
+type Task struct {
+	ID       int
+	Title    string
+	DueDate  string
+	Category string
+	IsDone   bool
+	UserID   int
 }
 
 func (u User) print() {
@@ -21,6 +29,7 @@ func (u User) print() {
 
 var userStorage []User
 var authenticatedUser *User // zero value for the pointer is nil
+var taskStorage []Task
 
 func main() {
 	fmt.Println("Hello to TODO app")
@@ -42,6 +51,11 @@ func main() {
 func runCommand(command string) {
 	if command != "register-user" && command != "exit" && authenticatedUser == nil {
 		login()
+
+		// this is sanitization
+		if authenticatedUser == nil {
+			return
+		}
 	}
 
 	switch command {
@@ -51,6 +65,8 @@ func runCommand(command string) {
 		createCategory()
 	case "register-user":
 		registerUser()
+	case "list-task":
+		listTask()
 	case "login":
 		login()
 	case "exit":
@@ -63,17 +79,13 @@ func runCommand(command string) {
 
 func createTask() {
 
-	if authenticatedUser != nil {
-		authenticatedUser.print()
-	}
-
 	scanner := bufio.NewScanner(os.Stdin)
 
-	var name, duedate, category string
+	var title, duedate, category string
 
 	fmt.Println("Please enter the task title")
 	scanner.Scan()
-	name = scanner.Text()
+	title = scanner.Text()
 
 	fmt.Println("Please enter the task category")
 	scanner.Scan()
@@ -83,7 +95,18 @@ func createTask() {
 	scanner.Scan()
 	duedate = scanner.Text()
 
-	fmt.Println("task: ", name, category, duedate)
+	task := Task{
+		ID:       len(taskStorage) + 1,
+		Title:    title,
+		DueDate:  duedate,
+		Category: category,
+		IsDone:   false,
+		UserID:   authenticatedUser.ID,
+	}
+
+	taskStorage = append(taskStorage, task)
+
+	fmt.Println("task: ", title, category, duedate)
 
 }
 
@@ -126,7 +149,7 @@ func registerUser() {
 	fmt.Println("user: ", id, email, password)
 
 	user := User{
-		ID:       strconv.Itoa(len(userStorage) + 1),
+		ID:       len(userStorage) + 1,
 		Name:     name,
 		Email:    email,
 		Password: password,
@@ -161,7 +184,14 @@ func login() {
 	// If there is a user record with corresponding data, then allow the user to continue
 	if authenticatedUser == nil {
 		fmt.Println("The email or password is not correct")
-		return
 	}
 
+}
+
+func listTask() {
+	for _, task := range taskStorage {
+		if task.UserID == authenticatedUser.ID {
+			fmt.Println(task)
+		}
+	}
 }
