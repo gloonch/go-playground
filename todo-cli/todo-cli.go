@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type User struct {
@@ -15,12 +16,19 @@ type User struct {
 }
 
 type Task struct {
-	ID       int
-	Title    string
-	DueDate  string
-	Category string
-	IsDone   bool
-	UserID   int
+	ID         int
+	Title      string
+	DueDate    string
+	CategoryID int
+	IsDone     bool
+	UserID     int
+}
+
+type Category struct {
+	ID     int
+	Title  string
+	Color  string
+	UserID int
 }
 
 func (u User) print() {
@@ -30,6 +38,7 @@ func (u User) print() {
 var userStorage []User
 var authenticatedUser *User // zero value for the pointer is nil
 var taskStorage []Task
+var categoryStorage []Category
 
 func main() {
 	fmt.Println("Hello to TODO app")
@@ -87,21 +96,42 @@ func createTask() {
 	scanner.Scan()
 	title = scanner.Text()
 
-	fmt.Println("Please enter the task category")
+	fmt.Println("Please enter the task category ID")
 	scanner.Scan()
 	category = scanner.Text()
 
+	categoryID, err := strconv.Atoi(category)
+	if err != nil {
+		fmt.Printf("Category id is not valid integer, %v\n", err)
+
+		return
+	}
+
+	isFound := false
+	for _, c := range categoryStorage {
+		if c.ID == categoryID && c.UserID == authenticatedUser.ID {
+			isFound = true
+
+			break
+		}
+	}
+
+	if !isFound {
+		fmt.Printf("Category id is not found\n")
+
+		return
+	}
 	fmt.Println("Please enter the task due date")
 	scanner.Scan()
 	duedate = scanner.Text()
 
 	task := Task{
-		ID:       len(taskStorage) + 1,
-		Title:    title,
-		DueDate:  duedate,
-		Category: category,
-		IsDone:   false,
-		UserID:   authenticatedUser.ID,
+		ID:         len(taskStorage) + 1,
+		Title:      title,
+		DueDate:    duedate,
+		CategoryID: categoryID,
+		IsDone:     false,
+		UserID:     authenticatedUser.ID,
 	}
 
 	taskStorage = append(taskStorage, task)
@@ -124,6 +154,15 @@ func createCategory() {
 	color = scanner.Text()
 
 	fmt.Println("category: ", title, color)
+
+	category := Category{
+		ID:     len(categoryStorage) + 1,
+		Title:  title,
+		Color:  color,
+		UserID: authenticatedUser.ID,
+	}
+
+	categoryStorage = append(categoryStorage, category)
 
 }
 
