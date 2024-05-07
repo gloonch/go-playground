@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type User struct {
@@ -40,7 +41,12 @@ var authenticatedUser *User // zero value for the pointer is nil
 var taskStorage []Task
 var categoryStorage []Category
 
+const userStoragePath = "user.txt"
+
 func main() {
+
+	loadUserStorageFromFile()
+
 	fmt.Println("Hello to TODO app")
 
 	command := flag.String("command", "no-command", "command to run")
@@ -199,16 +205,14 @@ func registerUser() {
 	// create user.txt file
 	// write user record in the user.txt file
 
-	path := "user.txt"
-
 	var file *os.File
 
-	_, err := os.Stat(path)
+	_, err := os.Stat(userStoragePath)
 	if err != nil {
 		fmt.Println("Path does not exist! ", err)
 
 		var cErr error
-		file, cErr = os.Create(path)
+		file, cErr = os.Create(userStoragePath)
 		if err != nil {
 			fmt.Println("Can't create the user.txt file", cErr)
 
@@ -217,7 +221,7 @@ func registerUser() {
 
 	} else {
 		var oErr error
-		file, oErr = os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+		file, oErr = os.OpenFile(userStoragePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
 		if err != nil {
 			fmt.Println("Can't create or open file ", oErr)
 
@@ -278,4 +282,37 @@ func listTask() {
 			fmt.Println(task)
 		}
 	}
+}
+
+func loadUserStorageFromFile() {
+	file, err := os.Open(userStoragePath)
+	if err != nil {
+		fmt.Println("Can't open the file ", err)
+	}
+
+	var data = make([]byte, 10240)
+	_, oErr := file.Read(data)
+	if oErr != nil {
+		fmt.Println("Can't read from the file ", oErr)
+	}
+
+	var dataStr = string(data)
+	dataStr = strings.Trim(dataStr, "\n")
+	userSlice := strings.Split(dataStr, "\n")
+	for index, u := range userSlice {
+		if u == "" {
+			continue
+		}
+		userFields := strings.Split(u, ",")
+		for _, field := range userFields {
+			values := strings.Split(field, ": ")
+			fieldName := values[0]
+			fieldValue := values[1]
+
+		}
+		//user :=
+	}
+
+	fmt.Println(data)
+
 }
