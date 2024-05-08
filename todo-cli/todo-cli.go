@@ -299,18 +299,42 @@ func loadUserStorageFromFile() {
 	var dataStr = string(data)
 	dataStr = strings.Trim(dataStr, "\n")
 	userSlice := strings.Split(dataStr, "\n")
-	for index, u := range userSlice {
+	for _, u := range userSlice {
 		if u == "" {
 			continue
 		}
+
+		var user = User{}
+
 		userFields := strings.Split(u, ",")
 		for _, field := range userFields {
 			values := strings.Split(field, ": ")
-			fieldName := values[0]
+			if len(values) != 2 {
+				fmt.Println("Record is not valid", len(values))
+
+				continue
+			}
+			fieldName := strings.ReplaceAll(values[0], " ", "")
 			fieldValue := values[1]
 
+			switch fieldName {
+			case "id":
+				id, err := strconv.Atoi(fieldValue)
+				if err != nil {
+					fmt.Println("strconv error ", err)
+
+					return
+				}
+				user.ID = id
+			case "name":
+				user.Name = fieldValue
+			case "email":
+				user.Email = fieldValue
+			case "password":
+				user.Password = fieldValue
+			}
 		}
-		//user :=
+		fmt.Printf("user: %+v\n", user)
 	}
 
 	fmt.Println(data)
