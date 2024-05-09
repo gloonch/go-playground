@@ -201,48 +201,7 @@ func registerUser() {
 	}
 	userStorage = append(userStorage, user)
 
-	// save user data in user.txt file
-	// create user.txt file
-	// write user record in the user.txt file
-
-	var file *os.File
-
-	_, err := os.Stat(userStoragePath)
-	if err != nil {
-		fmt.Println("Path does not exist! ", err)
-
-		var cErr error
-		file, cErr = os.Create(userStoragePath)
-		if err != nil {
-			fmt.Println("Can't create the user.txt file", cErr)
-
-			return
-		}
-
-	} else {
-		var oErr error
-		file, oErr = os.OpenFile(userStoragePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
-		if err != nil {
-			fmt.Println("Can't create or open file ", oErr)
-
-			return
-		}
-	}
-
-	data := fmt.Sprintf("id: %d, name: %s, email: %s, password: %s\n",
-		user.ID, user.Name, user.Email, user.Password)
-
-	//var byteData = []byte(data)
-	numberOfWrittenBytes, wErr := file.Write([]byte(data))
-	if wErr != nil {
-		fmt.Printf("Can't write to the file %v ", wErr)
-
-		return
-	}
-
-	fmt.Println("Number of written bytes ", numberOfWrittenBytes)
-
-	file.Close()
+	writeUserToFile(user)
 
 }
 
@@ -336,5 +295,53 @@ func loadUserStorageFromFile() {
 		}
 		fmt.Printf("user: %+v\n", user)
 	}
+
+}
+
+func writeUserToFile(user User) {
+
+	// save user data in user.txt file
+	// create user.txt file
+	// write user record in the user.txt file
+
+	var file *os.File
+
+	_, err := os.Stat(userStoragePath)
+	if err != nil {
+		fmt.Println("Path does not exist! ", err)
+
+		var cErr error
+		file, cErr = os.Create(userStoragePath)
+		if err != nil {
+			fmt.Println("Can't create the user.txt file", cErr)
+
+			return
+		}
+
+	} else {
+		var oErr error
+		file, oErr = os.OpenFile(userStoragePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+		if err != nil {
+			fmt.Println("Can't create or open file ", oErr)
+
+			return
+		}
+		defer file.Close()
+	}
+
+	data := fmt.Sprintf("id: %d, name: %s, email: %s, password: %s\n",
+		user.ID, user.Name, user.Email, user.Password)
+
+	//var byteData = []byte(data)
+	numberOfWrittenBytes, wErr := file.Write([]byte(data))
+	if wErr != nil {
+		fmt.Printf("Can't write to the file %v ", wErr)
+
+		return
+	}
+
+	fmt.Println("Number of written bytes ", numberOfWrittenBytes)
+
+	// call defer functions
 
 }
