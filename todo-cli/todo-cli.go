@@ -310,7 +310,7 @@ func loadUserStorageFromFile() {
 		for _, field := range userFields {
 			values := strings.Split(field, ": ")
 			if len(values) != 2 {
-				fmt.Println("Record is not valid", len(values))
+				fmt.Println("Record is not valid, skipping... ", len(values))
 
 				continue
 			}
@@ -336,7 +336,5 @@ func loadUserStorageFromFile() {
 		}
 		fmt.Printf("user: %+v\n", user)
 	}
-
-	fmt.Println(data)
 
 }
