@@ -60,7 +60,16 @@ func main() {
 	command := flag.String("command", "no-command", "command to run")
 	flag.Parse()
 
-	loadUserStorageFromFile(*sm)
+	//loadUserStorageFromFile(*sm)
+
+	var userReadFileStore userReadStore
+	var userReadStore = fileStore{
+		filePath: "./store/data.txt",
+	}
+
+	userReadFileStore = userReadStore
+
+	loadUserFromStorage(userReadFileStore, *sm)
 
 	fmt.Println("Hello to TODO app")
 
@@ -91,13 +100,21 @@ func runCommand(command string) {
 		}
 	}
 
+	var store userWriteStore
+
+	var userFileStore = fileStore{
+		filePath: "./store/user.txt",
+	}
+
+	store = userFileStore
+
 	switch command {
 	case "create-task":
 		createTask()
 	case "create-category":
 		createCategory()
 	case "register-user":
-		registerUser()
+		registerUser(store)
 	case "list-task":
 		listTask()
 	case "login":
@@ -190,7 +207,15 @@ func createCategory() {
 
 }
 
-func registerUser() {
+type userWriteStore interface {
+	Save(u User)
+}
+
+type userReadStore interface {
+	Load(serializeMode string) []User
+}
+
+func registerUser(store userWriteStore) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	var id, name, email, password string
@@ -219,8 +244,8 @@ func registerUser() {
 	}
 	userStorage = append(userStorage, user)
 
-	writeUserToFile(user)
-
+	//writeUserToFile(user)
+	store.Save(user)
 }
 
 func login() {
@@ -261,57 +286,13 @@ func listTask() {
 	}
 }
 
+func loadUserFromStorage(store userReadStore, serializeMode string) {
+	users := store.Load(serializeMode)
+
+	userStorage = append(userStorage, users...)
+}
+
 func loadUserStorageFromFile(serializeMode string) {
-	file, err := os.Open(userStoragePath)
-	if err != nil {
-		fmt.Println("Can't open the file ", err)
-	}
-
-	var data = make([]byte, 10240)
-	_, oErr := file.Read(data)
-	if oErr != nil {
-		fmt.Println("Can't read from the file ", oErr)
-
-		return
-	}
-
-	var dataStr = string(data)
-
-	dataStr = strings.Trim(dataStr, "\n")
-
-	userSlice := strings.Split(dataStr, "\n")
-
-	for _, u := range userSlice {
-		var userStruct = User{}
-
-		switch serializeMode {
-		case SERIALIZATION_MODE_MANDARAVARDI:
-			var dErr error
-			userStruct, dErr = deserializeFromMandaravardi(u)
-			if dErr != nil {
-				fmt.Println("Can't deserialize user record to user struct", dErr)
-
-				return
-			}
-		case SERIALIZATION_MODE_JSON:
-			if u[0] != '{' && u[len(u)-1] != '}' {
-				continue
-			}
-			uErr := json.Unmarshal([]byte(u), &userStruct)
-			if uErr != nil {
-				fmt.Println("Can't deserialize user record to user struct with json mode ", uErr)
-
-				return
-			}
-		default:
-			fmt.Println("invalid serialization mode")
-
-			return
-		}
-
-		fmt.Println("unmarshalled user: ", userStruct)
-		userStorage = append(userStorage, userStruct)
-	}
 
 }
 
@@ -422,4 +403,67 @@ func hashPassword(password string) string {
 	hash := md5.Sum([]byte(password))
 
 	return hex.EncodeToString(hash[:])
+}
+
+type fileStore struct {
+	filePath string
+}
+
+func (f fileStore) Save(u User) {
+	writeUserToFile(u)
+}
+
+func (f fileStore) Load(serializationMode string) []User {
+	var uStorage []User
+
+	file, err := os.Open(userStoragePath)
+	if err != nil {
+		fmt.Println("Can't open the file ", err)
+	}
+
+	var data = make([]byte, 10240)
+	_, oErr := file.Read(data)
+	if oErr != nil {
+		fmt.Println("Can't read from the file ", oErr)
+
+		return nil
+	}
+
+	var dataStr = string(data)
+
+	dataStr = strings.Trim(dataStr, "\n")
+
+	userSlice := strings.Split(dataStr, "\n")
+
+	for _, u := range userSlice {
+		var userStruct = User{}
+
+		switch serializationMode {
+		case SERIALIZATION_MODE_MANDARAVARDI:
+			var dErr error
+			userStruct, dErr = deserializeFromMandaravardi(u)
+			if dErr != nil {
+				fmt.Println("Can't deserialize user record to user struct", dErr)
+
+				return nil
+			}
+		case SERIALIZATION_MODE_JSON:
+			if u[0] != '{' && u[len(u)-1] != '}' {
+				continue
+			}
+			uErr := json.Unmarshal([]byte(u), &userStruct)
+			if uErr != nil {
+				fmt.Println("Can't deserialize user record to user struct with json mode ", uErr)
+
+				return nil
+			}
+		default:
+			fmt.Println("invalid serialization mode")
+
+			return nil
+		}
+
+		uStorage = append(userStorage, userStruct)
+	}
+	return uStorage
 }
