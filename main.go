@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"todocli/constant"
+	"todocli/contract"
+	"todocli/entity"
+	"todocli/filestore"
 )
 
 type Task struct {
@@ -24,10 +28,6 @@ type Category struct {
 	Title  string
 	Color  string
 	UserID int
-}
-
-func (u entity.User) print() {
-	fmt.Println("User: ", u.ID, u.Email, u.Name)
 }
 
 var (

@@ -1,5 +1,7 @@
 package contract
 
+import "todocli/entity"
+
 type UserWriteStore interface {
 	Save(u entity.User)
 }

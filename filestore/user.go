@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"todocli/constant"
+	"todocli/entity"
 )
 
 type FileStore struct {
@@ -73,7 +75,7 @@ func (f FileStore) Load() []entity.User {
 			return nil
 		}
 
-		uStorage = append(userStorage, userStruct)
+		//uStorage = append(f, userStruct)
 	}
 	return uStorage
 }
@@ -86,12 +88,12 @@ func (f FileStore) writeUserToFile(user entity.User) {
 
 	var file *os.File
 
-	_, err := os.Stat(userStoragePath)
+	_, err := os.Stat(f.filePath)
 	if err != nil {
 		fmt.Println("Path does not exist! ", err)
 
 		var cErr error
-		file, cErr = os.Create(userStoragePath)
+		file, cErr = os.Create(f.filePath)
 		if err != nil {
 			fmt.Println("Can't create the user.txt file", cErr)
 
